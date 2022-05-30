@@ -21,4 +21,4 @@ Detailed requirements and starter code can be found here:
 https://github.com/udacity/cd0384-java-application-deployment-projectstarter/tree/master/starter
 # License  
   
-[License](LICENSE.txt)
+[License](LICENSE.md)
