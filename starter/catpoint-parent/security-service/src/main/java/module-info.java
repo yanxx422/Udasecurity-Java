@@ -5,4 +5,8 @@ module com.udacity.catpoint.securityservice{
   requires com.google.common;
   requires com.google.gson;
   requires java.prefs;
+  requires junit;
+  requires org.mockito;
+  requires org.junit.jupiter.api;
+  requires mockito.junit.jupiter;
 }
