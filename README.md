@@ -1,4 +1,4 @@
-# UdaSecurity
+# Java Application Deployment Project: UdaSecurity 
 
 ![UdaSecurity Logo](UdaSecurity.png)
 
@@ -16,6 +16,7 @@ This is a home security application which tracks the the **status of sensors**, 
 
 ## More Info:
 This is a capstone project of Udacity's Java Programming Nanodegree: Java Application Deployment.
+
 Detailed requirements and starter code can be found here:
 https://github.com/udacity/cd0384-java-application-deployment-projectstarter/tree/master/starter
 # License  
