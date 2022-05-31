@@ -37,7 +37,7 @@ public class SecurityService {
      */
     public void setArmingStatus(ArmingStatus armingStatus) {
 
-        if (isCatDetect() && armingStatus==ArmingStatus.ARMED_HOME){
+        if (isCatDetect() && armingStatus == ArmingStatus.ARMED_HOME){
             setAlarmStatus(AlarmStatus.ALARM);
         }
         else if(armingStatus == ArmingStatus.DISARMED) {
@@ -113,7 +113,7 @@ public class SecurityService {
     /**
      * Internal method for updating the alarm status when a sensor has been deactivated
      */
-    private void handleSensorDeactivated() {
+    protected void handleSensorDeactivated() {
         switch(securityRepository.getAlarmStatus()) {
             case PENDING_ALARM -> setAlarmStatus(AlarmStatus.NO_ALARM);
             case ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);

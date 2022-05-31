@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.udacity.catpoint.imageservice.service.ImageService;
+import com.udacity.catpoint.securityservice.application.StatusListener;
 import com.udacity.catpoint.securityservice.data.AlarmStatus;
 import com.udacity.catpoint.securityservice.data.ArmingStatus;
 import com.udacity.catpoint.securityservice.data.SecurityRepository;
@@ -39,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class SecurityServiceTest {
   private SecurityService securityService;
+  private StatusListener listener;
   @Mock
   private Sensor sensor;
   @Mock
@@ -182,7 +184,7 @@ public class SecurityServiceTest {
 
   @Test
   @DisplayName("If the system is armed-home while the camera shows a cat, set the alarm status to alarm.")
-  void ifArmed_homeAndImageContainsACCat_setToAlarm(){
+  void ifArmed_homeAndImageContainsACat_setAlarmToAlarm(){
     //given
     when(imageService.imageContainsCat(any(),anyFloat())).thenReturn(true);
     when(securityRepository.getArmingStatus()).thenReturn(ARMED_HOME);
@@ -191,6 +193,61 @@ public class SecurityServiceTest {
     securityService.setAlarmStatus(ALARM);
     //then
     verify(securityRepository,atMost(2)).setAlarmStatus(ALARM);
+  }
+
+  // The following tests are for the test coverage
+
+  @Test
+  void ifArmed_homeAndImageContainsACat_setToAlarm(){
+    when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
+    when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+    securityService.processImage(image);
+    verify(securityRepository, atMostOnce()).setAlarmStatus(ALARM);
+  }
+
+  @Test
+  void ifDisarmedAndActivateASensor_setToPendingAlarm() {
+    when(securityRepository.getArmingStatus()).thenReturn(DISARMED);
+    securityService.changeSensorActivationStatus(sensor,true);
+    verify(securityRepository,atMostOnce()).setAlarmStatus(PENDING_ALARM);
+  }
+
+  @Test
+  void ifPendingAlarmAndDeactivateASensor_setToNoAlarm(){
+    sensor.setActive(true);
+    when(securityRepository.getAlarmStatus()).thenReturn(PENDING_ALARM);
+    securityService.changeSensorActivationStatus(sensor,false);
+    verify(securityRepository,atMostOnce()).setAlarmStatus(NO_ALARM);
+  }
+
+  @Test
+  void ifAlarmedAndhandleSensorDeactivated_setToPendingAlarm(){
+    when(securityService.getAlarmStatus()).thenReturn(ALARM);
+    securityService.handleSensorDeactivated();
+    verify(securityRepository).setAlarmStatus(PENDING_ALARM);
+  }
+
+  @Test
+  void ifPendingAlarmedAndhandleSensorDeactivated_setToNoAlarm(){
+    when(securityService.getAlarmStatus()).thenReturn(PENDING_ALARM);
+    securityService.handleSensorDeactivated();
+    verify(securityRepository).setAlarmStatus(NO_ALARM);
+  }
+
+
+
+  @Test
+  void testAddRemoveSensor(){
+    securityService.addSensor(sensor);
+    verify(securityRepository).addSensor(sensor);
+    securityService.removeSensor(sensor);
+    verify(securityRepository).removeSensor(sensor);
+  }
+
+  @Test
+  void testAddRemoveListener(){
+    securityService.addStatusListener(listener);
+    securityService.removeStatusListener(listener);
   }
 
 }
