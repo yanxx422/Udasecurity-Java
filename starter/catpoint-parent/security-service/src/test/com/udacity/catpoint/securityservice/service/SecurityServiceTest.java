@@ -5,14 +5,20 @@ import static com.udacity.catpoint.securityservice.data.AlarmStatus.NO_ALARM;
 import static com.udacity.catpoint.securityservice.data.AlarmStatus.PENDING_ALARM;
 import static com.udacity.catpoint.securityservice.data.ArmingStatus.ARMED_HOME;
 import static com.udacity.catpoint.securityservice.data.ArmingStatus.DISARMED;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeast;
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.udacity.catpoint.imageservice.service.ImageService;
+import com.udacity.catpoint.securityservice.data.AlarmStatus;
+import com.udacity.catpoint.securityservice.data.ArmingStatus;
 import com.udacity.catpoint.securityservice.data.SecurityRepository;
 import com.udacity.catpoint.securityservice.data.Sensor;
 import com.udacity.catpoint.securityservice.data.SensorType;
@@ -25,6 +31,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,7 +45,6 @@ public class SecurityServiceTest {
   private ImageService imageService;
   @Mock
   private SecurityRepository securityRepository;
-
   @Mock
   BufferedImage image;
 
@@ -56,77 +62,99 @@ public class SecurityServiceTest {
     return sensorList;
   }
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(value = ArmingStatus.class,names={"ARMED_AWAY","ARMED_HOME"})
   @DisplayName("If alarm is armed and a sensor becomes activated, put the system into pending alarm status.")
-  void ifAlarmIsArmedAndSensorIsActive_setAlarmStatusToPENDING_ALARM() {
-    when(sensor.getActive()).thenReturn(false);
+  void ifAlarmIsArmedAndSensorIsActive_setAlarmStatusToPENDING_ALARM(ArmingStatus status) {
+    //given
     when(securityRepository.getAlarmStatus()).thenReturn(NO_ALARM);
-    when(securityRepository.getArmingStatus()).thenReturn(ARMED_HOME);
+    when(securityRepository.getArmingStatus()).thenReturn(status);
+    //when
     securityService.changeSensorActivationStatus(sensor, true);
-    verify(securityRepository, times(1)).setAlarmStatus(eq(PENDING_ALARM));
+    //then
+    verify(securityRepository, times(1)).setAlarmStatus(PENDING_ALARM);
   }
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(value = ArmingStatus.class,names={"ARMED_AWAY","ARMED_HOME"})
   @DisplayName("If alarm is armed and a sensor becomes activated and the system is already pending alarm, set the alarm status to alarm.")
-  void ifAlarmIsArmedAndSensorIsActiveAndSensorIsPendingAlarm_setAlarmStatusToAlarm() {
-    when(sensor.getActive()).thenReturn(true);
+  void ifAlarmIsArmedAndSensorIsActiveAndSensorIsPendingAlarm_setAlarmStatusToAlarm(ArmingStatus status) {
+    //given
     when(securityRepository.getAlarmStatus()).thenReturn(PENDING_ALARM);
-    when(securityRepository.getArmingStatus()).thenReturn(ARMED_HOME);
+    when(securityRepository.getArmingStatus()).thenReturn(status);
+    //when
     securityService.changeSensorActivationStatus(sensor, true);
-    verify(securityRepository, times(1)).setAlarmStatus(eq(ALARM));
+    //then
+    verify(securityRepository,atMostOnce()).setAlarmStatus(ALARM);
   }
 
   @Test
   @DisplayName("If pending alarm and all sensors are inactive, return to no alarm state.")
   void ifPendingAlarmAndSensorsAreInactive_setToNoAlarm() {
-    Set<Sensor> sensorList = getSensorList(true,10);
-    //when(securityRepository.getSensors()).thenReturn(sensorList);
+    //given
+    Set<Sensor> sensorList = getSensorList(true,2);
     when(securityRepository.getAlarmStatus()).thenReturn(PENDING_ALARM);
-    Sensor ASensor = sensorList.iterator().next();
-    securityService.changeSensorActivationStatus(ASensor, false);
-    verify(securityRepository, times(1)).setAlarmStatus(eq(NO_ALARM));
+    Sensor Sensor_1 = sensorList.iterator().next();
+    Sensor Sensor_2 = sensorList.iterator().next();
+    securityService.changeSensorActivationStatus(Sensor_1, false);
+    securityService.changeSensorActivationStatus(Sensor_2, false);
+    //then
+    verify(securityRepository, atMostOnce()).setAlarmStatus(NO_ALARM);
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   @DisplayName("If alarm is active, change in sensor state should not affect the alarm state.")
-  void ifAlarmIsActive_sensorStateChange_shouldNotAffectAlarmState(Boolean ActiveStatus){
-    when(securityRepository.getAlarmStatus()).thenReturn(ALARM);
-    securityService.changeSensorActivationStatus(sensor, ActiveStatus);
-    verify(securityRepository,times(0)).setAlarmStatus(any());
+  void ifAlarmIsActive_sensorStateChange_shouldNotAffectAlarmState(boolean activeStatus){
+    //given
+    lenient().when(securityRepository.getAlarmStatus()).thenReturn(ALARM);
+    //when
+    securityService.changeSensorActivationStatus(sensor, activeStatus);
+    //then
+    verify(securityRepository,never()).setAlarmStatus(any());
   }
 
   @Test
   @DisplayName("If a sensor is activated while already active and the system is in pending state, change it to alarm state.")
   void ifPendingAndActivateAnAlreadyActivatedSensor_setToAlarm(){
-    when(sensor.getActive()).thenReturn(true);
-    when(securityRepository.getAlarmStatus()).thenReturn(PENDING_ALARM);
+    //given
+    when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
+    sensor.setActive(true);
+    //then
     securityService.changeSensorActivationStatus(sensor,true);
-    verify(securityRepository,times(1)).setAlarmStatus(eq(ALARM));
+    verify(securityRepository,times(1)).setAlarmStatus(ALARM);
   }
 
   @Test
   @DisplayName("If a sensor is deactivated while already inactive, make no changes to the alarm state.")
   void ifDeactivateAlreadyInActiveSensor_shouldNotAffectAlarmState(){
-    when(sensor.getActive()).thenReturn(false);
+    //given
+    sensor.setActive(false);
+    //when
     securityService.changeSensorActivationStatus(sensor, false);
-    verify(securityRepository, times(0)).setArmingStatus(any());
+    //then
+    verify(securityRepository, never()).setArmingStatus(any());
   }
 
 
   @Test
   @DisplayName("If the camera image contains a cat while the system is armed-home, put the system into alarm status.")
   void ifArmedHomeAndImageContainsACat_setToAlarm(){
-    when(securityService.getArmingStatus()).thenReturn(ARMED_HOME);
-    when(imageService.imageContainsCat(image, 50.0f)).thenReturn(true);
+    //given
+    when(imageService.imageContainsCat(any(),anyFloat())).thenReturn(true);
+    when(securityRepository.getArmingStatus()).thenReturn(ARMED_HOME);
+    //when
     securityService.processImage(image);
+    //then
     verify(securityRepository, times(1)).setAlarmStatus(ALARM);
   }
 
   @Test
   @DisplayName("If the camera image does not contain a cat, change the status to no alarm as long as the sensors are not active.")
   void ifImageNotContainsACatAndSensorsAreNotActive_setToNoAlarm(){
-    when(imageService.imageContainsCat(image, 50.0f)).thenReturn(false);
+    Set<Sensor> sensors = getSensorList(false,3);
+    lenient().when(securityRepository.getSensors()).thenReturn(sensors);
+    when(imageService.imageContainsCat(any(),anyFloat())).thenReturn(false);
     securityService.processImage(image);
     verify(securityRepository,times(1)).setAlarmStatus(NO_ALARM);
   }
@@ -138,18 +166,31 @@ public class SecurityServiceTest {
     verify(securityRepository).setAlarmStatus(NO_ALARM);
   }
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(value = ArmingStatus.class,names={"ARMED_AWAY","ARMED_HOME"})
   @DisplayName("If the system is armed, reset all sensors to inactive.")
-  void ifArmed_setAllSensorsToInactive(){
-    securityService.setArmingStatus(ARMED_HOME);
-    verify(securityRepository,atLeast(1)).updateSensor(sensor);
-
+  void ifArmed_setAllSensorsToInactive(ArmingStatus status){
+    //given
+    Set<Sensor> sensors = getSensorList(false,2);
+    when(securityService.getAlarmStatus()).thenReturn(PENDING_ALARM);
+    when(securityRepository.getSensors()).thenReturn(sensors);
+    //when
+    securityService.setArmingStatus(status);
+    //then
+    securityService.getSensors().forEach(sensor->assertFalse(sensor.getActive()));
   }
 
   @Test
   @DisplayName("If the system is armed-home while the camera shows a cat, set the alarm status to alarm.")
   void ifArmed_homeAndImageContainsACCat_setToAlarm(){
-
+    //given
+    when(imageService.imageContainsCat(any(),anyFloat())).thenReturn(true);
+    when(securityRepository.getArmingStatus()).thenReturn(ARMED_HOME);
+    securityService.processImage(image);
+    //when
+    securityService.setAlarmStatus(ALARM);
+    //then
+    verify(securityRepository,atMost(2)).setAlarmStatus(ALARM);
   }
 
 }
