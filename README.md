@@ -13,7 +13,14 @@ This is a home security application which tracks the the **status of sensors**, 
 -   Automatically run unit tests.
 -   Perform static code analysis (generate a `spotbugs.html` report .
 -   Build executable file.
+## Run Executable
+Navigate to `starter/catpoint-parent/security-service/target` folder
 
+Run `java -jar security-service-1.0-SNAPSHOT-jar-with-dependencies.jar`
+## Static Code Analysis
+Navigate to `starter/catpoint-parent/security-service/site` folder
+
+check `spotbugs.html`
 ## More Info:
 This is a capstone project of Udacity's Java Programming Nanodegree: Java Application Deployment.
 
