@@ -15,6 +15,7 @@ This is a home security application which tracks the the **status of sensors**, 
 -   Build executable file.
 ## Run Executable
 Navigate to `starter/catpoint-parent/security-service/target` folder
+![JarRunning](([./starter/UdaSecurity.png](https://github.com/yanxx422/Udasecurity-Java/blob/main/starter/executable_jar.png)))
 Run `java -jar security-service-1.0-SNAPSHOT-jar-with-dependencies.jar`
 ## Static Code Analysis
 Navigate to `starter/catpoint-parent/security-service/site` folder
