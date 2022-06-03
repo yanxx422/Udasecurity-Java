@@ -18,8 +18,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>14</maven.compiler.source>
-    <maven.compiler.target>14</maven.compiler.target>
+    <maven.compiler.source>18</maven.compiler.source>
+    <maven.compiler.target>18</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -79,7 +79,7 @@
           <version>3.0.0-M5</version>
           <configuration>
             <argLine>
-              --add-opens security-service/com.udacity.catpoint.securityservice.service=ALL-UNNAMED
+              --add-opens com.udacity.catpoint.securityservice/com.udacity.catpoint.securityservice.service=ALL-UNNAMED
             </argLine>
           </configuration>
         </plugin>
