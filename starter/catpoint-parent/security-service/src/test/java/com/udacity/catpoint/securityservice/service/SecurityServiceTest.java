@@ -165,13 +165,13 @@ public class SecurityServiceTest {
   @DisplayName("If the camera image does not contain a cat, change the status to no alarm as long as the sensors are not active.")
   void ifImageNotContainsACatAndSensorsAreNotActive_setToNoAlarm(){
     //given
-    Set<Sensor> sensorList = getSensorList(false,3);
-    when(securityRepository.getSensors()).thenReturn(sensorList);
     when(imageService.imageContainsCat(any(),anyFloat())).thenReturn(false);
+    sensor.setActive(false);
+    securityService.changeSensorActivationStatus(sensor, false);
     //when
     securityService.processImage(image);
     //then
-    verify(securityRepository,times(1)).setAlarmStatus(NO_ALARM);
+    verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
   }
 
   @Test
@@ -234,12 +234,6 @@ public class SecurityServiceTest {
     verify(securityRepository,atMostOnce()).setAlarmStatus(NO_ALARM);
   }
 
-  @Test
-  void ifAlarmedAndhandleSensorDeactivated_setToPendingAlarm(){
-    when(securityService.getAlarmStatus()).thenReturn(ALARM);
-    securityService.handleSensorDeactivated();
-    verify(securityRepository).setAlarmStatus(PENDING_ALARM);
-  }
 
   @Test
   void ifPendingAlarmedAndhandleSensorDeactivated_setToNoAlarm(){
