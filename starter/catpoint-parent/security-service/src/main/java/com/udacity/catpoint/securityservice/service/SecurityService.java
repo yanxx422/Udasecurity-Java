@@ -140,10 +140,6 @@ public class SecurityService {
     statusListeners.forEach(sl -> sl.notify(status));
   }
 
-  private boolean allSensorsInActiveState(boolean activeState) {
-    return getSensors().stream().allMatch(it -> it.getActive() == activeState);
-  }
-
   public Set<Sensor> getSensors() {
     return securityRepository.getSensors();
   }

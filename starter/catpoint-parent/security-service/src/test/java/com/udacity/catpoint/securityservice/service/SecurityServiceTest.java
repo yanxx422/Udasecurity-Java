@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -198,15 +199,12 @@ public class SecurityServiceTest {
   @Test
   @DisplayName("If the system is armed-home while the camera shows a cat, set the alarm status to alarm.")
   void ifArmed_homeAndImageContainsACat_setAlarmToAlarm() {
-    //given
-    when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
-    when(securityRepository.getArmingStatus()).thenReturn(ARMED_HOME);
-    securityService.processImage(image);
-    //when
-    securityService.setAlarmStatus(ALARM);
-    //then
-    verify(securityRepository, atMost(2)).setAlarmStatus(ALARM);
-  }
+      when(imageService.imageContainsCat(any(BufferedImage.class), anyFloat())).thenReturn(true);
+      securityService.processImage(mock(BufferedImage.class));
+      securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
+      verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.ALARM);
+    }
+
 
   // The following tests are for the test coverage
 
@@ -231,6 +229,16 @@ public class SecurityServiceTest {
     when(securityRepository.getAlarmStatus()).thenReturn(PENDING_ALARM);
     securityService.changeSensorActivationStatus(sensor, false);
     verify(securityRepository, atMostOnce()).setAlarmStatus(NO_ALARM);
+  }
+
+  @Test
+  void ifDisarmedAndAlarmIsActiveAndActivateAlarm_setToPendingAlarm()
+  {
+    when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
+    when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+    sensor.setActive(true);
+    securityService.changeSensorActivationStatus(sensor, false);
+    verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.PENDING_ALARM);
   }
 
 
