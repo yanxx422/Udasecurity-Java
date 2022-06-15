@@ -14,15 +14,13 @@ public class Sensor implements Comparable<Sensor> {
     private Boolean active;
     private SensorType sensorType;
 
+    public Sensor(){};
+
     public Sensor(String name, SensorType sensorType) {
         this.name = name;
         this.sensorType = sensorType;
         this.sensorId = UUID.randomUUID();
         this.active = Boolean.FALSE;
-    }
-
-    public Sensor(){
-
     }
 
     @Override
@@ -73,9 +71,10 @@ public class Sensor implements Comparable<Sensor> {
     @Override
     public int compareTo(Sensor o) {
         return ComparisonChain.start()
-                .compare(this.name, o.name)
-                .compare(this.sensorType.toString(), o.sensorType.toString())
-                .compare(this.sensorId, o.sensorId)
-                .result();
+            .compare(this.name, o.name)
+            .compare(this.sensorType.toString(), o.sensorType.toString())
+            .compare(this.sensorId, o.sensorId)
+            .result();
     }
 }
+
